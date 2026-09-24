@@ -1,0 +1,11 @@
+{
+  "title": "SJ Law Academy | Digital Law School",
+  "description": "Premium digital law school for Nigerian law students with structured notes, video lessons, case law, practice questions, mock exams, and academic-level subscriptions.",
+  "robots": {
+    "index": true
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

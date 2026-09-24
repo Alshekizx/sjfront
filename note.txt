@@ -1,0 +1,992 @@
+I analyzed the uploaded Archive.zip project, including the React source, App.tsx, navigation components, page files, authentication context, mock data, and the product requirements document.
+
+There is an important distinction: this project currently has frontend SPA routes, but it does not contain an actual backend/API implementation. There is no Supabase client, no API server, no Edge Function source, and no fetch()/Axios calls. The authentication is currently mocked in AuthContext.tsx.
+
+So below I’ve separated actual registered frontend endpoints, referenced-but-unregistered endpoints, and backend endpoints the PRD says the finished system will need.
+
+1. Actual registered frontend endpoints
+
+These are the routes that are genuinely registered in src/App.tsx.
+
+Public endpoints
+Endpoint	Access	Purpose	Component
+/	Public	Main landing/homepage	Landing.tsx
+/about	Public	About SJ Law Academy	About.tsx
+/academic-levels	Public	100L–500L academic levels	AcademicLevels.tsx
+/pricing	Public	Subscription/pricing information	Pricing.tsx
+/contact	Public	Contact/support page	Contact.tsx
+/
+
+The main public homepage.
+
+/about
+
+Platform/company information.
+
+/academic-levels
+
+Displays the five academic levels.
+
+/pricing
+
+Displays subscription plans/pricing.
+
+/contact
+
+Contact/support information.
+
+2. Authentication endpoints
+Endpoint	Access	Purpose	Component
+/login	Public only	User login	auth/Login.tsx
+/signup	Public only	Create account	auth/SignUp.tsx
+/forgot-password	Public	Password recovery	auth/ForgotPassword.tsx
+/login
+
+If authenticated, the user is redirected to:
+
+/dashboard
+/signup
+
+If authenticated, the user is redirected to:
+
+/dashboard
+/forgot-password
+
+Currently provides the forgot-password UI, but there is no actual password-reset backend integration.
+
+3. Student endpoints
+
+These require authentication.
+
+Endpoint	Access	Purpose	Component
+/dashboard	Protected	Student dashboard	student/Dashboard.tsx
+/courses	Protected	Course listing	student/Courses.tsx
+/courses/:courseId	Protected	Individual course	student/CourseDetail.tsx
+/courses/:courseId/topic/:topicId	Protected	Individual learning topic	student/TopicLearning.tsx
+/practice	Protected	Practice area	student/Practice.tsx
+/case-law	Protected	Case-law library	student/CaseLaw.tsx
+/resources	Protected	Learning resources/library	student/Library.tsx
+/progress	Protected	Learning progress	student/Progress.tsx
+/library	Protected	Student library/bookmarks	student/Library.tsx
+/notifications	Protected	Notifications	student/Notifications.tsx
+/dashboard
+
+Central student dashboard.
+
+Intended functionality includes:
+
+trial status
+subscription status
+active levels
+courses
+progress
+recent activity
+notifications
+quick actions
+continue learning
+/courses
+
+Student's authorised courses.
+
+/courses/:courseId
+
+Dynamic course detail endpoint.
+
+Example:
+
+/courses/c001
+
+The :courseId parameter identifies the course.
+
+/courses/:courseId/topic/:topicId
+
+Dynamic topic-learning endpoint.
+
+Example:
+
+/courses/c001/topic/t005
+
+Parameters:
+
+courseId
+topicId
+
+This is intended to be the actual learning interface.
+
+/practice
+
+Main practice area.
+
+/case-law
+
+Case law library.
+
+/resources
+
+Learning resources/library.
+
+/progress
+
+Student learning analytics/progress.
+
+/library
+
+Student saved/library content.
+
+/notifications
+
+Student notifications.
+
+4. Account endpoints
+
+The account section is nested under:
+
+/account
+Endpoint	Access	Purpose
+/account	Protected	Account root
+/account/profile	Protected	Profile
+/account/subscriptions	Protected	Subscriptions
+/account/payments	Protected	Payment history
+/account/security	Protected	Security
+/account/preferences	Protected	Preferences
+
+The /account endpoint itself automatically redirects to:
+
+/account/profile
+/account/profile
+
+Handles profile information.
+
+The existing UI is intended for information such as:
+
+name
+email
+phone
+university
+academic level
+avatar
+/account/subscriptions
+
+Shows subscriptions.
+
+Intended information includes:
+
+level
+subscription status
+start date
+expiry date
+price
+payment reference
+renew/subscribe actions
+/account/payments
+
+Payment history.
+
+/account/security
+
+Security/account credentials.
+
+/account/preferences
+
+User preferences.
+
+Currently this route actually renders the Profile component:
+
+<Route path="preferences" element={<Profile />} />
+
+So this is not a properly implemented preferences page yet.
+
+5. Payment endpoints
+Endpoint	Access	Purpose	Component
+/checkout/:levelId	Protected	Subscription checkout	payment/Checkout.tsx
+/payment/success	Protected	Successful payment page	payment/Success.tsx
+/checkout/:levelId
+
+Dynamic payment endpoint.
+
+Example:
+
+/checkout/100
+
+or:
+
+/checkout/2
+
+depending on how the level identifier is currently represented.
+
+The page is intended to:
+
+Display selected level
+Display price
+Display subscription information
+Start Paystack payment
+Verify payment
+Unlock the purchased level
+Critical current problem
+
+The existing checkout does not actually integrate Paystack.
+
+The current implementation simply navigates to:
+
+/payment/success
+
+after the simulated payment action.
+
+There is therefore currently no real payment API endpoint.
+
+6. /payment/success
+
+Payment success page.
+
+Intended to display:
+
+transaction reference
+purchased level
+amount
+subscription period
+successful payment message
+Start Learning
+
+However, payment verification is currently mocked.
+
+7. Catch-all endpoint
+
+There is also:
+
+*
+
+Anything that does not match a registered route gets redirected to:
+
+/
+
+So, for example:
+
+/random-page
+
+becomes:
+
+/
+8. Complete actual route map
+
+The application currently registers 27 route definitions, including the catch-all:
+
+/
+├── /about
+├── /academic-levels
+├── /pricing
+├── /contact
+│
+├── /login
+├── /signup
+├── /forgot-password
+│
+├── /dashboard
+├── /courses
+│   ├── /courses/:courseId
+│   └── /courses/:courseId/topic/:topicId
+├── /practice
+├── /case-law
+├── /resources
+├── /progress
+├── /library
+├── /notifications
+│
+├── /account
+│   ├── /account/profile
+│   ├── /account/subscriptions
+│   ├── /account/payments
+│   ├── /account/security
+│   └── /account/preferences
+│
+├── /checkout/:levelId
+└── /payment/success
+
+* → /
+9. Broken/referenced endpoints that are NOT registered
+
+This is where the project has a significant problem.
+
+Several pages/components contain links to endpoints that do not exist in App.tsx.
+
+Academic-level routes
+
+The code references:
+
+/levels
+/levels/100
+/levels/200
+/levels/300
+/levels/400
+/levels/500
+
+But the actual registered endpoint is:
+
+/academic-levels
+
+There is no:
+
+/levels
+
+route.
+
+Therefore these links currently lead to the catch-all and ultimately:
+
+/
+Referenced:
+/levels
+/levels/100
+/levels/200
+/levels/300
+/levels/400
+/levels/500
+Actual:
+/academic-levels
+
+This needs to be standardized.
+
+10. Broken /learn endpoint
+
+CoursesPage.tsx contains:
+
+/learn/:courseId/topic/5
+
+Example:
+
+/learn/c001/topic/5
+
+But the actual registered learning endpoint is:
+
+/courses/:courseId/topic/:topicId
+
+Therefore:
+
+/learn/c001/topic/5
+
+is currently broken.
+
+It should probably become:
+
+/courses/c001/topic/t005
+
+or another consistent topic identifier.
+
+11. Broken practice endpoints
+
+The project references:
+
+/practice/mcq
+/practice/past
+/practice/problem
+/practice/mock
+
+But only this route is registered:
+
+/practice
+
+Therefore these currently don't have actual route handlers.
+
+Referenced:
+/practice/mcq
+/practice/past
+/practice/problem
+/practice/mock
+Registered:
+/practice
+
+The PRD specifically calls for:
+
+MCQs
+past questions
+problem questions
+scenario questions
+essay questions
+mock examinations
+
+So these should eventually become real routes.
+
+12. Broken resource endpoints
+
+The navigation references:
+
+/resources/dictionary
+/resources/materials
+/resources/statutes
+
+But only:
+
+/resources
+
+is registered.
+
+Therefore these are currently missing:
+
+/resources/dictionary
+/resources/materials
+/resources/statutes
+13. Broken account endpoints
+
+The project references:
+
+/account/bookmarks
+/account/notifications
+/account/progress
+
+but they are not registered.
+
+The current equivalent pages are:
+
+/library
+/notifications
+/progress
+
+So the project has inconsistent endpoint naming.
+
+Current:
+/library
+/notifications
+/progress
+Also referenced:
+/account/bookmarks
+/account/notifications
+/account/progress
+
+These need to be consolidated.
+
+14. Missing legal endpoints
+
+The application links to:
+
+/terms
+/privacy
+
+but neither is registered.
+
+Therefore these are broken:
+
+/terms
+/privacy
+
+This is particularly important because the signup page links to both.
+
+15. Missing FAQ endpoint
+
+The footer and navigation reference:
+
+/faq
+
+but there is no route for it.
+
+The PRD explicitly calls for an FAQ page.
+
+So:
+
+/faq
+
+needs to be implemented.
+
+16. Missing support endpoint
+
+The PRD calls for Help & Support functionality, but there isn't a dedicated registered:
+
+/support
+
+endpoint.
+
+The current closest page is:
+
+/contact
+
+This needs a product decision:
+
+Either:
+
+/contact
+
+becomes the support centre,
+
+or create:
+
+/support
+17. Course-specific endpoints referenced but not registered
+
+The old navigation references:
+
+/courses/constitutional-law
+/courses/criminal-law
+/courses/contract-law
+/courses/torts
+
+Interestingly, the current App.tsx does have:
+
+/courses/:courseId
+
+so these URLs technically match the dynamic route.
+
+Therefore these are not actually missing.
+
+For example:
+
+/courses/constitutional-law
+
+will match:
+
+/courses/:courseId
+
+with:
+
+courseId = constitutional-law
+
+So these are valid dynamic routes, provided the course component knows how to handle those IDs.
+
+18. Existing frontend route architecture has duplicate/legacy pages
+
+There are two sets of page components.
+
+Current App architecture
+src/pages/
+    Landing.tsx
+    About.tsx
+    AcademicLevels.tsx
+    Pricing.tsx
+    Contact.tsx
+
+src/pages/auth/
+    Login.tsx
+    SignUp.tsx
+    ForgotPassword.tsx
+
+src/pages/student/
+    Dashboard.tsx
+    Courses.tsx
+    CourseDetail.tsx
+    TopicLearning.tsx
+    Practice.tsx
+    CaseLaw.tsx
+    Progress.tsx
+    Library.tsx
+    Notifications.tsx
+Older/duplicate architecture
+src/pages/LandingPage.tsx
+src/pages/AboutPage.tsx
+src/pages/AcademicLevelsPage.tsx
+src/pages/PricingPage.tsx
+src/pages/Contact.tsx
+src/pages/LoginPage.tsx
+src/pages/SignUpPage.tsx
+src/pages/DashboardPage.tsx
+src/pages/CoursesPage.tsx
+src/pages/PracticePage.tsx
+src/pages/CaseLawPage.tsx
+src/pages/AccountPage.tsx
+
+This is important.
+
+There are effectively two different implementations of several parts of the site.
+
+That explains why some components use:
+
+/levels
+
+while the current router uses:
+
+/academic-levels
+
+and why there are different navigation systems.
+
+19. Actual backend/API endpoints: currently NONE
+
+This is the most important technical finding.
+
+I searched the project for:
+
+fetch()
+axios
+Supabase
+createClient()
+/api/
+XMLHttpRequest
+
+There is no actual backend API implementation.
+
+The project does not currently contain:
+
+/api/*
+
+endpoints.
+
+It also does not contain:
+
+supabase/functions/*
+
+or an equivalent Edge Function directory.
+
+There is no Supabase client dependency in package.json.
+
+The current authentication is:
+
+MOCK_USER
+
+inside:
+
+src/context/AuthContext.tsx
+
+The login function simply waits one second and then logs in the mock user.
+
+The signup function simply waits 1.2 seconds and then creates a local mock user.
+
+Therefore:
+
+the application currently has frontend routes, not a working backend.
+
+20. Backend endpoints the finished application needs
+
+Based on the PRD, the actual production system should eventually expose a backend/API layer, most naturally through Supabase directly plus Supabase Edge Functions.
+
+I would structure the backend around the following endpoint groups.
+
+Authentication
+POST /auth/signup
+POST /auth/login
+POST /auth/logout
+POST /auth/forgot-password
+POST /auth/reset-password
+POST /auth/verify-email
+GET  /auth/session
+
+In actual Supabase implementation, many of these would be handled through Supabase Auth rather than custom REST endpoints.
+
+21. User/profile endpoints
+GET    /profile
+PATCH  /profile
+
+GET    /profile/academic
+PATCH  /profile/academic
+
+PATCH  /profile/preferences
+PATCH  /profile/security
+22. Academic level endpoints
+GET /levels
+GET /levels/:levelId
+GET /levels/:levelId/courses
+GET /levels/:levelId/progress
+GET /levels/:levelId/subscription
+
+Examples:
+
+GET /levels/100
+GET /levels/200
+GET /levels/300
+GET /levels/400
+GET /levels/500
+23. Course endpoints
+GET /courses
+GET /courses/:courseId
+GET /courses/:courseId/topics
+GET /courses/:courseId/progress
+GET /courses/:courseId/resources
+24. Topic/learning endpoints
+GET   /courses/:courseId/topics/:topicId
+POST  /courses/:courseId/topics/:topicId/complete
+GET   /courses/:courseId/topics/:topicId/progress
+PATCH /courses/:courseId/topics/:topicId/progress
+
+For video learning:
+
+GET   /courses/:courseId/topics/:topicId/video
+POST  /courses/:courseId/topics/:topicId/video/progress
+25. Notes endpoints
+GET /notes
+GET /notes/:noteId
+GET /courses/:courseId/notes
+GET /topics/:topicId/notes
+26. Case-law endpoints
+GET /cases
+GET /cases/:caseId
+GET /cases/search
+GET /courses/:courseId/cases
+GET /topics/:topicId/cases
+
+Filters should eventually support:
+
+level
+course
+topic
+year
+court
+search
+27. Practice endpoints
+GET  /practice
+GET  /practice/questions
+GET  /practice/questions/:questionId
+POST /practice/attempts
+GET  /practice/attempts
+GET  /practice/attempts/:attemptId
+POST /practice/attempts/:attemptId/submit
+28. Practice category endpoints
+GET /practice/mcq
+GET /practice/past
+GET /practice/problem
+GET /practice/scenario
+GET /practice/essay
+GET /practice/mock
+29. Examination endpoints
+GET  /exams
+GET  /exams/:examId
+POST /exams/:examId/start
+POST /exams/:examId/answers
+POST /exams/:examId/submit
+GET  /exams/:examId/results
+GET  /exams/:examId/review
+
+This supports:
+
+countdown
+saved answers
+question navigation
+flagged questions
+submission
+results
+answer review
+30. Progress endpoints
+GET /progress
+GET /progress/levels
+GET /progress/courses
+GET /progress/topics
+GET /progress/practice
+GET /progress/exams
+GET /progress/activity
+31. Bookmark/library endpoints
+GET    /bookmarks
+POST   /bookmarks
+DELETE /bookmarks/:bookmarkId
+
+Or, more specifically:
+
+POST /bookmarks/note/:noteId
+POST /bookmarks/case/:caseId
+POST /bookmarks/video/:videoId
+POST /bookmarks/course/:courseId
+POST /bookmarks/topic/:topicId
+32. Notifications endpoints
+GET   /notifications
+GET   /notifications/:notificationId
+PATCH /notifications/:notificationId/read
+POST  /notifications/read-all
+33. Subscription endpoints
+GET  /subscriptions
+GET  /subscriptions/:subscriptionId
+GET  /subscriptions/active
+GET  /subscriptions/expired
+POST /subscriptions/:levelId/renew
+34. Payment endpoints
+
+This is where Supabase Edge Functions + Paystack should be used.
+
+The production architecture should have something equivalent to:
+
+POST /functions/v1/initialize-payment
+POST /functions/v1/verify-payment
+POST /functions/v1/paystack-webhook
+Initialize
+POST /functions/v1/initialize-payment
+
+Receives something like:
+
+user
+level
+amount
+email
+
+and securely initializes Paystack.
+
+Verify
+POST /functions/v1/verify-payment
+
+Receives:
+
+reference
+
+and verifies the transaction with Paystack.
+
+Webhook
+POST /functions/v1/paystack-webhook
+
+Receives Paystack payment events.
+
+The Paystack secret key must remain server-side.
+
+35. Subscription entitlement endpoint
+
+A particularly important backend operation is:
+
+GET /entitlements
+
+or:
+
+GET /access
+
+This should determine:
+
+trial active?
+trial expired?
+100L active?
+200L active?
+300L active?
+400L active?
+500L active?
+
+This should not be trusted to frontend state.
+
+The PRD specifically requires access enforcement through Supabase Row Level Security and subscription entitlements.
+
+36. Search endpoints
+
+The PRD calls for global search across:
+
+courses
+topics
+notes
+cases
+videos
+practice questions
+
+So the backend should support something like:
+
+GET /search?q=
+
+with filters:
+
+level
+course
+topic
+contentType
+
+Example:
+
+GET /search?q=consideration&level=200&contentType=case
+37. Resource endpoints
+
+The PRD also calls for:
+
+GET /resources
+GET /resources/:resourceId
+GET /resources/dictionary
+GET /resources/materials
+GET /resources/statutes
+38. Support endpoints
+
+For a proper support system:
+
+GET  /faq
+GET  /support
+POST /support/tickets
+GET  /support/tickets
+GET  /support/tickets/:ticketId
+39. What the project currently has vs what it needs
+Area	Current project	Production requirement
+React routing	✅	✅
+Public pages	✅	✅
+Student pages	✅	✅
+Account pages	⚠️ Partial	✅
+Payment UI	✅ Mock	✅
+Paystack	❌	✅
+Supabase	❌	✅
+Real authentication	❌	✅
+Database	❌	✅
+API	❌	✅
+Edge Functions	❌	✅
+Payment verification	❌	✅
+Webhook	❌	✅
+RLS	❌	✅
+Subscription entitlement	❌	✅
+Trial management	❌	✅
+Course database	❌	✅
+Topic database	❌	✅
+Case-law database	❌	✅
+Practice database	❌	✅
+Exam system	⚠️ UI/mock	✅
+Progress persistence	❌	✅
+Bookmarks persistence	❌	✅
+Notifications persistence	❌	✅
+Search backend	❌	✅
+40. The endpoint problems I found
+
+The most important routing inconsistencies are:
+
+/academic-levels
+
+vs
+
+/levels
+/courses/:courseId/topic/:topicId
+
+vs
+
+/learn/:courseId/topic/:topicId
+/practice
+
+vs
+
+/practice/mcq
+/practice/past
+/practice/problem
+/practice/mock
+/resources
+
+vs
+
+/resources/dictionary
+/resources/materials
+/resources/statutes
+/library
+
+vs
+
+/account/bookmarks
+/notifications
+
+vs
+
+/account/notifications
+/progress
+
+vs
+
+/account/progress
+
+And completely missing:
+
+/faq
+/terms
+/privacy
+Bottom line
+
+The uploaded project is currently best described as a React/Vite frontend prototype with mock data and simulated authentication, not yet a connected full-stack application.
+
+The actual frontend route inventory is relatively complete, but there are several broken/inconsistent links because older components still reference a different routing architecture.
+
+The production architecture should ultimately look roughly like:
+
+SJ LAW ACADEMY FRONTEND
+        │
+        ├── Public Routes
+        ├── Auth Routes
+        ├── Student Routes
+        ├── Account Routes
+        └── Payment Routes
+                 │
+                 ▼
+              SUPABASE
+                 │
+        ┌────────┼─────────┐
+        ▼        ▼         ▼
+     Auth     PostgreSQL   Storage
+                 │
+                 ▼
+        Row Level Security
+                 │
+                 ▼
+       SUPABASE EDGE FUNCTIONS
+                 │
+                 ▼
+              PAYSTACK
