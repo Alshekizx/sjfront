@@ -13,7 +13,7 @@ import { supabase } from '@/lib/supabase';
 export default function TopicLearning() {
   const { courseId, topicId } = useParams();
   const { user } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [activeTab, setActiveTab] = useState<'notes' | 'video'>('notes');
   const [bookmarked, setBookmarked] = useState(false);
   const [completed, setCompleted] = useState(false);
@@ -28,6 +28,11 @@ export default function TopicLearning() {
 
   const currentTopicIndex = topics.findIndex((t) => t.id === topicId);
   const currentTopic = topics[currentTopicIndex];
+  useEffect(() => {
+    setActiveTab(currentTopic?.hasVideo && !currentTopic.hasNotes ? 'video' : 'notes');
+    setError('');
+  }, [currentTopic?.id, currentTopic?.hasVideo, currentTopic?.hasNotes]);
+
   const prevTopic = currentTopicIndex > 0 ? topics[currentTopicIndex - 1] : null;
   const nextTopic = currentTopicIndex < topics.length - 1 ? topics[currentTopicIndex + 1] : null;
   const saveProgress = async (changes: { bookmarked?: boolean; completed_at?: string | null }) => {
@@ -88,6 +93,7 @@ export default function TopicLearning() {
                   {topic.completed ? <CheckCircle size={10} /> : i + 1}
                 </div>
                 <span className="truncate leading-snug">{topic.title}</span>
+                {topic.hasVideo && <Play size={13} className="shrink-0" aria-label="Video tutorial available" />}
               </Link>
             );
           })}
@@ -97,12 +103,12 @@ export default function TopicLearning() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Toolbar */}
-        <div className="bg-white border-b border-[var(--border)] px-4 py-3 flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors">
+        <div className="bg-white border-b border-[var(--border)] px-4 py-3 flex flex-wrap items-center gap-3">
+          <button aria-label="Toggle lesson list" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors">
             <Menu size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-[var(--muted-foreground)]">Law of Contract I · Topic {currentTopicIndex + 1}</p>
+            <p className="text-xs text-[var(--muted-foreground)]">{currentTopic?.courseTitle || 'Course'} · Topic {currentTopicIndex + 1}</p>
             <p className="text-sm font-semibold text-[var(--foreground)] truncate">{currentTopic?.title}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -115,9 +121,10 @@ export default function TopicLearning() {
               </button>
               <button
                 onClick={() => setActiveTab('video')}
+                aria-pressed={activeTab === 'video'}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'video' ? 'bg-white shadow-sm text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}`}
               >
-                <Play size={13} /> Video
+                <Play size={13} /> Video Tutorial
               </button>
             </div>
             <button
@@ -143,6 +150,10 @@ export default function TopicLearning() {
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'notes' ? (
             <div className="max-w-3xl mx-auto px-6 py-10">
+              {currentTopic?.hasVideo && <div className="mb-6 rounded-xl border border-[var(--border)] bg-white p-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm">This lesson includes a video tutorial.</p>
+                <button onClick={() => setActiveTab('video')} className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white"><Play size={16} /> Watch Tutorial</button>
+              </div>}
               <NotesRenderer content={currentTopic?.content || 'No notes have been published for this lesson yet.'} />
             </div>
           ) : (

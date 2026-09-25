@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, ArrowRight, HelpCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { usePageContent } from '@/lib/content';
 import { getAcademicLevels, getSiteContent, type AcademicLevelData, type FaqData } from '@/lib/data';
 
 export default function Pricing() {
   const content = usePageContent('pricing');
+  const { isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [levels, setLevels] = useState<AcademicLevelData[]>([]);
   const [faqs, setFaqs] = useState<FaqData[]>([]);
 
   useEffect(() => {
-    getAcademicLevels().then(setLevels);
+    getAcademicLevels().then(setLevels).finally(() => setLoading(false));
     getSiteContent<FaqData>('pricing', 'faqs').then(setFaqs);
   }, []);
 
@@ -38,6 +41,7 @@ export default function Pricing() {
       {/* Pricing cards */}
       <section className="py-16">
         <div className="container-shell">
+          <p role="status" className="text-center text-[var(--muted-foreground)]">{loading ? 'Loading levels and prices…' : levels.length === 0 ? 'No subscription plans are available right now. Please try again later.' : ''}</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             {levels.map((level, i) => (
               <div
@@ -73,14 +77,14 @@ export default function Pricing() {
                   </ul>
 
                   <Link
-                    to="/signup"
+                    to={isAuthenticated ? `/checkout/${level.level}` : '/signup'}
                     className={`block text-center py-2.5 text-sm font-semibold rounded-lg transition-colors ${
                       i === 1
                         ? 'bg-[var(--primary)] text-white hover:bg-[#0a1840]'
                         : 'border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white'
                     }`}
                   >
-                    Start Free Trial
+                    {isAuthenticated ? 'Subscribe' : 'Start Free Trial'}
                   </Link>
                 </div>
               </div>

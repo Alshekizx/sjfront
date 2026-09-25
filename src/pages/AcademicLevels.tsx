@@ -6,10 +6,11 @@ import { getAcademicLevels, type AcademicLevelData } from '@/lib/data';
 
 export default function AcademicLevels() {
   const { user, isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [levels, setLevels] = useState<AcademicLevelData[]>([]);
 
   useEffect(() => {
-    getAcademicLevels().then(setLevels);
+    getAcademicLevels().then(setLevels).finally(() => setLoading(false));
   }, []);
 
   function getLevelStatus(levelNum: number) {
@@ -37,6 +38,7 @@ export default function AcademicLevels() {
       {/* Levels */}
       <section className="py-16">
         <div className="container-shell space-y-8">
+          <p role="status" className="text-center text-[var(--muted-foreground)]">{loading ? 'Loading academic levels…' : levels.length === 0 ? 'No academic levels are available right now. Please try again later.' : ''}</p>
           {levels.map((level) => {
             const status = getLevelStatus(level.level);
             const subscribed = status === 'active' || status === 'trial';

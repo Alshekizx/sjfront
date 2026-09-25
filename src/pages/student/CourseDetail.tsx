@@ -85,7 +85,7 @@ export default function CourseDetail() {
                 <p className="text-sm font-semibold text-[var(--foreground)] truncate">{topic.title}</p>
                 <div className="flex items-center gap-2 mt-1">
                   {topic.hasNotes && <span className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]"><FileText size={10} /> Notes</span>}
-                  {topic.hasVideo && <span className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]"><Play size={10} /> Video</span>}
+                  {topic.hasVideo && <span className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]"><Play size={10} /> Video tutorial available</span>}
                 </div>
               </div>
               <ChevronRight size={16} className="text-[var(--muted-foreground)] group-hover:text-[var(--primary)] transition-colors shrink-0" />
