@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { getTopics, type TopicData } from '@/lib/data';
 import { useAuth } from '@/context/AuthContext';
+import { youtubeEmbedUrl } from '@/lib/video';
 import { safeWebUrl } from '@/lib/content';
 import { supabase } from '@/lib/supabase';
 
@@ -53,6 +54,8 @@ export default function TopicLearning() {
     else setVideoUrl(safeWebUrl(value) || '');
     return () => { active = false; };
   }, [currentTopic?.videoUrl]);
+
+  const embedUrl = youtubeEmbedUrl(videoUrl);
 
   return (
     <div className="min-h-screen flex bg-[var(--background)]">
@@ -145,7 +148,7 @@ export default function TopicLearning() {
           ) : (
             <div className="max-w-3xl mx-auto px-6 py-10">
               <h2 className="font-serif text-xl mb-4">{currentTopic?.title}</h2>
-              {videoUrl ? <><video key={videoUrl} src={videoUrl} controls preload="metadata" className="w-full rounded-xl" onError={() => setError('This video link cannot be played here. Use the link below to open it.')} /><a href={videoUrl} target="_blank" rel="noopener noreferrer" className="inline-block mt-4 underline">Open video</a></> : <p>No video has been published for this lesson.</p>}
+              {videoUrl ? <>{embedUrl ? <iframe key={embedUrl} src={embedUrl} title={currentTopic?.title || 'Tutorial video'} className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /> : <video key={videoUrl} src={videoUrl} controls preload="metadata" className="w-full rounded-xl" onError={() => setError('This video link cannot be played here. Use the link below to open it.')} />}<a href={videoUrl} target="_blank" rel="noopener noreferrer" className="inline-block mt-4 underline">{embedUrl ? 'Watch on YouTube' : 'Open video'}</a></> : <p>No video has been published for this lesson.</p>}
             </div>
           )}
         </div>
