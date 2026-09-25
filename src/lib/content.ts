@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 
+export function reportCatalogError(error: { code?: string; message?: string }, fallback: string) {
+  const missingSchema = ['PGRST202', 'PGRST204', '42703'].includes(error.code || '');
+  if (missingSchema) console.error('Catalog database setup is incomplete. Apply adminWebsite/supabase/migrations/202609250001_shared_content.sql.', error.code, error.message);
+  reportDataError(missingSchema ? 'The catalog is temporarily unavailable. Please try again later.' : fallback);
+}
+
 export function reportDataError(message: string) {
   window.dispatchEvent(new CustomEvent('content-load-error', { detail: message }));
 }
@@ -15,9 +21,25 @@ export function usePageContent(slug: string) {
   }, [slug]);
   return content;
 }
+let pendingCounts: PromiseLike<any> | undefined;
+function getCatalogCounts() {
+  if (!pendingCounts) {
+    pendingCounts = Promise.resolve(supabase.rpc('published_catalog_counts')).finally(() => { pendingCounts = undefined; });
+  }
+  return Promise.resolve(pendingCounts);
+}
+
 export function useCatalogCounts() {
   const [counts, setCounts] = useState<Record<string, number>>({});
-  useEffect(() => { supabase.rpc('published_catalog_counts').then(({ data, error }) => { if (error) reportDataError('Unable to load catalog totals. Please try again.'); else setCounts(data || {}); }); }, []);
+  useEffect(() => {
+    let active = true;
+    getCatalogCounts().then(({ data, error }) => {
+      if (!active) return;
+      if (error) reportCatalogError(error, 'Unable to load catalog totals. Please try again.');
+      else setCounts(data || {});
+    }).catch(() => { if (active) reportDataError('Unable to load catalog totals. Please try again.'); });
+    return () => { active = false; };
+  }, []);
   return counts;
 }
 export function safeWebUrl(value: string | undefined) {

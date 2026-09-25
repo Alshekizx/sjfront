@@ -33,7 +33,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  signup: (data: SignupData) => Promise<void>;
+  signup: (data: SignupData) => Promise<boolean>;
 }
 
 interface SignupData {
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (data: SignupData) => {
-    const { error } = await supabase.auth.signUp({
+    const { data: result, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       throw new Error(error.message || 'Unable to create account');
     }
-
+    return !!result.session;
   };
 
   return (

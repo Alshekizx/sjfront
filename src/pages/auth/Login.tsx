@@ -1,12 +1,11 @@
 import { useState, FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import logoDark from '@/assets/ref2.png';
 
 export default function Login() {
   const { login } = useAuth();
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +18,6 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
     } catch {
       setError('Invalid email or password. Please try again.');
     } finally {
@@ -123,9 +121,7 @@ export default function Login() {
             <Link to="/signup" className="text-[var(--primary)] font-semibold hover:underline">Start free trial</Link>
           </div>
 
-          <div className="mt-6 p-3.5 bg-[var(--muted)] rounded-lg border border-[var(--border)] text-xs text-[var(--muted-foreground)] text-center">
-            <strong className="text-[var(--foreground)]">Demo:</strong> Enter any email and password to log in as a demo student.
-          </div>
+
         </div>
       </div>
     </div>

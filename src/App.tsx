@@ -16,6 +16,7 @@ import Contact from '@/pages/Contact';
 import Login from '@/pages/auth/Login';
 import SignUp from '@/pages/auth/SignUp';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
+import ResetPassword from '@/pages/auth/ResetPassword';
 
 // Student pages
 import Dashboard from '@/pages/student/Dashboard';
@@ -48,9 +49,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const from = location.state?.from;
+  const destination = typeof from?.pathname === 'string' && from.pathname.startsWith('/') && !from.pathname.startsWith('//')
+    ? { pathname: from.pathname, search: from.search || '', hash: from.hash || '' }
+    : '/dashboard';
   const { isAuthenticated, loading } = useAuth();
   if (loading) return <p role="status" className="p-8">Loading your account…</p>;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) return <Navigate to={destination} replace />;
   return <>{children}</>;
 }
 
@@ -84,6 +90,8 @@ export default function App() {
           <Route path="/login" element={<PublicOnlyRoute><Layout noFooter><Login /></Layout></PublicOnlyRoute>} />
           <Route path="/signup" element={<PublicOnlyRoute><Layout noFooter><SignUp /></Layout></PublicOnlyRoute>} />
           <Route path="/forgot-password" element={<Layout noFooter><ForgotPassword /></Layout>} />
+
+          <Route path="/reset-password" element={<Layout noFooter><ResetPassword /></Layout>} />
 
           {/* Protected student routes */}
           <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />

@@ -26,6 +26,7 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const strength = passwordStrength(form.password);
 
@@ -40,14 +41,17 @@ export default function SignUp() {
     setError('');
     setLoading(true);
     try {
-      await signup({ name: form.name, email: form.email, phone: form.phone, password: form.password, university: form.university, academicLevel: form.academicLevel });
-      navigate('/dashboard');
+      const signedIn = await signup({ name: form.name, email: form.email, phone: form.phone, password: form.password, university: form.university, academicLevel: form.academicLevel });
+      if (signedIn) navigate('/dashboard');
+      else setConfirmationSent(true);
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   }
+
+  if (confirmationSent) return <div className="min-h-screen flex items-center justify-center px-6"><div className="max-w-md space-y-4"><h1 className="font-serif text-3xl">Check your email</h1><p role="status">Follow the confirmation link sent to {form.email} to activate your account.</p><Link to="/login" className="underline">Return to sign in</Link></div></div>;
 
   return (
     <div className="min-h-screen flex">

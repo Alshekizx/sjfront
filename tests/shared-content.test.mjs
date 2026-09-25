@@ -17,9 +17,9 @@ function loadData(tables = {}, rpcs = {}) {
     maybeSingle() { this.single = true; return this; }
     then(resolve, reject) { return Promise.resolve({ data: this.single ? this.rows[0] || null : this.rows, error: null }).then(resolve, reject); }
   }
-  const supabase = { from: table => new Query(table), rpc: async name => ({ data: rpcs[name] || [], error: null }), storage: { from(bucket) { assert.equal(bucket, 'media'); return { createSignedUrl: async (path, expires) => { calls.push({ path, expires }); return { data: { signedUrl: `https://example.test/${path}?signed` }, error: null }; } }; } } };
+  const supabase = { from: table => new Query(table), rpc: async name => rpcs[name]?.error ? rpcs[name] : ({ data: rpcs[name] || [], error: null }), storage: { from(bucket) { assert.equal(bucket, 'media'); return { createSignedUrl: async (path, expires) => { calls.push({ path, expires }); return { data: { signedUrl: `https://example.test/${path}?signed` }, error: null }; } }; } } };
   const exports = {};
-  new Function('require', 'exports', compile(readFileSync(new URL('../src/lib/data.ts', import.meta.url), 'utf8')))(name => name === './supabase' ? { supabase } : { reportDataError: error => errors.push(error), safeWebUrl: value => value?.startsWith('https://') ? value : undefined }, exports);
+  new Function('require', 'exports', compile(readFileSync(new URL('../src/lib/data.ts', import.meta.url), 'utf8')))(name => name === './supabase' ? { supabase } : { reportCatalogError: (error, message) => errors.push({ ...error, message }), reportDataError: error => errors.push(error), safeWebUrl: value => value?.startsWith('https://') ? value : undefined }, exports);
   return { api: exports, calls, errors };
 }
 function adminRecord(collection, record) {
@@ -77,4 +77,10 @@ test('expired subscriptions reflect their stored expiry instead of claiming acti
   const { api } = loadData({ subscriptions: [{ id: 'sub', student_id: 'student', status: 'active', starts_at: '2020-01-01', expires_at: '2020-07-01', academic_levels: { level: 200, name: 'Second year', price: 5000 }, payments: [{ status: 'success', amount: 4200, reference: 'real-reference' }] }] });
   const [subscription] = await api.getStudentSubscriptions('student');
   assert.equal(subscription.status, 'expired'); assert.equal(subscription.price, 4200); assert.equal(subscription.reference, 'real-reference');
+});
+
+test('missing count RPC reports a catalog error instead of displaying invented totals', async () => {
+  const { api, errors } = loadData({ academic_levels: [{ id: 'level', status: 'published' }] }, { published_level_counts: { data: null, error: { code: 'PGRST202' } } });
+  assert.deepEqual(await api.getAcademicLevels(), []);
+  assert.equal(errors[0].code, 'PGRST202');
 });

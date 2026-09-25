@@ -1,4 +1,4 @@
-import { reportDataError, safeWebUrl } from './content';
+import { reportCatalogError, reportDataError, safeWebUrl } from './content';
 import { supabase } from './supabase';
 
 export type AcademicLevelData = { id: string; level: number; name: string; shortName: string; description: string; courses: number; topics: number; price: number; duration: string; objectives: string[]; color: string };
@@ -21,7 +21,7 @@ export async function getAcademicLevels(): Promise<AcademicLevelData[]> {
     supabase.from('academic_levels').select('id,level,name,description,price,duration_months,objectives').eq('status', 'published').order('sort_order'),
     supabase.rpc('published_level_counts'),
   ]);
-  if (error || countsResult.error) { reportDataError('Unable to load academic levels. Please try again.'); return []; }
+  if (error || countsResult.error) { reportCatalogError((error || countsResult.error)!, 'Unable to load academic levels. Please try again.'); return []; }
   return ((levels ?? []) as LevelRow[]).map(row => {
     const counts = (countsResult.data || []).find((item: any) => item.level_id === row.id);
     return { id: row.id, level: row.level / 100, name: row.name, shortName: `${row.level}L`, description: row.description, courses: Number(counts?.course_count || 0), topics: Number(counts?.topic_count || 0), price: Number(row.price), duration: `${row.duration_months} months`, objectives: Array.isArray(row.objectives) ? row.objectives : [], color: '#1B4F72' };

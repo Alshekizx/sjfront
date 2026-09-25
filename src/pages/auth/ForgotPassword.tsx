@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Link } from 'react-router-dom';
 import { Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
 
@@ -6,13 +7,19 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSent(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` });
+      if (error) throw error;
+      setSent(true);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to send reset instructions. Please try again.');
+    } finally { setLoading(false); }
   }
 
   return (
@@ -40,6 +47,7 @@ export default function ForgotPassword() {
             <h1 className="font-serif text-3xl font-bold text-[var(--primary)] mb-2">Reset Password</h1>
             <p className="text-[var(--muted-foreground)] mb-8 text-sm">Enter your email address and we'll send you instructions to reset your password.</p>
 
+            {error && <p role="alert" className="mb-4 text-sm text-red-600">{error}</p>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Email Address</label>

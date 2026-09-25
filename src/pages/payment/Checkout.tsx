@@ -6,14 +6,19 @@ import { getAcademicLevels, type AcademicLevelData } from '@/lib/data';
 export default function Checkout() {
   const { levelId } = useParams();
   const [levels, setLevels] = useState<AcademicLevelData[]>([]);
+  const [loadingLevels, setLoadingLevels] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    getAcademicLevels().then(setLevels);
+    let active = true;
+    getAcademicLevels().then(data => { if (active) setLevels(data); }).catch(() => { if (active) setError('Unable to load this subscription. Please try again.'); }).finally(() => { if (active) setLoadingLevels(false); });
+    return () => { active = false; };
   }, []);
 
   const level = levels.find((l) => l.level === Number(levelId));
+
+  if (loadingLevels) return <p role="status" className="min-h-screen p-20 text-center">Loading subscription…</p>;
 
   if (!level) return <div className="min-h-screen pt-20 flex items-center justify-center"><p>Level not found.</p></div>;
 
