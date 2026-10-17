@@ -58,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data: profile, error } = await supabase.from('student_profiles').select('*').eq('id', authUser.id).maybeSingle();
       if (error) throw error;
+      if (profile?.is_active === false) throw new Error('Your account is inactive.');
       const [subscriptions, notifications] = await Promise.all([getStudentSubscriptions(authUser.id), getNotifications(authUser.id)]);
       if (request !== generation.current) return;
       const metadata = authUser.user_metadata || {};

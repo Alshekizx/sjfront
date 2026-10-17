@@ -1,3 +1,4 @@
+import { paymentRequest } from '@/lib/payments';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { CheckCircle, Lock, CreditCard, Loader2, ArrowLeft } from 'lucide-react';
@@ -23,10 +24,17 @@ export default function Checkout() {
   if (!level) return <div className="min-h-screen pt-20 flex items-center justify-center"><p>Level not found.</p></div>;
 
   async function handlePay() {
-    // A payment is only recorded after Paystack calls the verified webhook in
-    // adminWebsite/supabase/functions/server. Never create a fake payment or subscription from the browser.
-    setLoading(false);
-    setError('Paystack checkout has not been configured yet. No payment or subscription has been created.');
+    if (!level || loading) return;
+    setLoading(true); setError('');
+    try {
+      const result = await paymentRequest('initialize', { academic_level_id: level.id });
+      const destination = new URL(result.authorization_url);
+      if (destination.protocol !== 'https:' || destination.hostname !== 'checkout.paystack.com') throw new Error('Invalid checkout address. Please contact support.');
+      window.location.assign(destination.href);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to start payment.');
+      setLoading(false);
+    }
   }
 
   return (

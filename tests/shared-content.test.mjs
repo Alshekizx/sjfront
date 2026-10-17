@@ -23,7 +23,7 @@ function loadData(tables = {}, rpcs = {}) {
   return { api: exports, calls, errors };
 }
 function adminRecord(collection, record) {
-  const source = readFileSync(new URL('../../adminWebsite/supabase/functions/server/index.tsx', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../../adminWebsite/supabase/functions/make-server-f63d7d22/index.ts', import.meta.url), 'utf8');
   const exports = {};
   class Hono { use() {} get() {} put() {} post() {} delete() {} }
   new Function('require', 'exports', 'Deno', compile(`${source}\nexport { databaseRecord };`))(name => name === 'npm:hono' ? { Hono } : name === 'npm:hono/cors' ? { cors: () => {} } : name === 'npm:hono/logger' ? { logger: () => {} } : {}, exports, { serve() {} });
